@@ -1,0 +1,4 @@
+dlk/
+.ipynb_checkpoints/
+metastore_db/
+derby.log

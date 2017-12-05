@@ -1,0 +1,297 @@
+{
+	"AWSTemplateFormatVersion": "2010-09-09",
+
+	"Description": "Rhythm EMR",
+
+	"Mappings": {
+		"params": {
+			"AdditionalMasterSecurityGroups": {
+				"devuseast1": ["sg-2acf904e", "sg-68747610", "sg-4f4e5a35"],
+				"devuswest2": [""]
+			},
+			"AdditionalSlaveSecurityGroups": {
+				"devuseast1": ["sg-2acf904e", "sg-68747610", "sg-4f4e5a35"],
+				"devuswest2": [""]
+			},
+			"AMI": {
+				"devuseast1": "ami-a69b5fdc",
+				"devuswest2": ""
+			},
+			"CMDBEnvironment": {
+				"devuseast1":"ENVPRRTLBNKMTRCSAWS",
+				"devuswest2":"ENVPRRTLBNKMTRCSAWS"
+			},
+			"Ec2KeyName": {
+				"devuseast1":"oil474_ec2",
+				"devuswest2":"oil474_ec2"
+			},
+			"LogUri": {
+				"devuseast1": "s3://cof-bankrtl-rhythm-deploy-dev/emr-logs/",
+				"devuswest2": "s3://cof-bankrtl-rhythm-deploy-dev/emr-logs/"
+			},
+			"EmrManagedMasterSecurityGroup": {
+				"devuseast1": "sg-f650fa8a",
+				"devuswest2": ""
+			},
+			"ServiceAccessSecurityGroup": {
+				"devuseast1": "sg-d850faa4",
+				"devuswest2": ""
+			},
+			"EmrManagedSlaveSecurityGroup": {
+				"devuseast1": "sg-f050fa8c",
+				"devuswest2": ""
+			},
+			"Ec2SubnetId": {
+				"devuseast1": "subnet-a9660582",
+				"devuswest2": ""
+			},
+			"SecurityDomain":{
+				"devuseast1":"dqa.capitalone.com",
+				"devuswest2":"dqa.capitalone.com"
+			},
+			"SecurityRole":{
+				"devuseast1":"DAWS_ENVNP_PUNI_CG",
+				"devuswest2":"DAWS_ENVNP_PUNI_CG"
+			},
+			"BootstrapScript":{
+				"devuseast1":"s3://cof-bankrtl-rhythm-deploy-dev/bootstrap/emr-bootstrap.sh",
+				"devuswest2":"s3://cof-bankrtl-rhythm-deploy-dev/bootstrap/emr-bootstrap.sh"
+			},
+			"EmrJobFlowRole":{
+				"devuseast1":"EMR_EC2_DefaultRole",
+				"devuswest2":"EMR_EC2_DefaultRole"
+			},
+			"EmrServiceRole":{
+				"devuseast1":"EMR_DefaultRole",
+				"devuswest2":"EMR_DefaultRole"
+			}
+		}
+	},
+
+	"Parameters": {
+		"Applications": {
+			"Description": "Software",
+			"Type": "CommaDelimitedList",
+			"Default": "{\"Name\": \"Spark\"},{\"Name\": \"Hive\"},{\"Name\": \"ZooKeeper\"},{\"Name\": \"Hue\"}"
+		},
+		"ASV": {
+			"Description": "Tag - Application Service",
+			"Type": "String",
+			"Default": "ASVCOBBANKDATAWAREHOUSE"
+		},
+		"AutoScalingRole": {
+			"Description": "Allows Auto Scaling to add and terminate EC2 instances when an Auto Scaling rule is triggered",
+			"Type": "String",
+			"Default": "EMR_AutoScaling_DefaultRole"
+		},
+		"Name": {
+			"Description": "Cluster Name",
+			"Type": "String",
+			"Default": "Rhythm-emr"
+		},
+		"CoreInstanceType": {
+			"Description": "EC2 instance type of Core node(s)",
+			"Type": "String",
+			"Default": "m2.2xlarge"
+		},
+		"ReleaseLabel": {
+			"Description": "Determines the base configuration of the instances in your cluster",
+			"Type": "String",
+			"Default": "emr-5.2.1"
+		},
+		"Environment": {
+			"Description": "The environment where the EMR cluster will be deployed",
+			"Type": "String",
+			"AllowedValues": [
+				"devuseast1",
+				"devuswest2"
+			],
+			"Default": "devuseast1"
+		},
+		"BucketExt":{
+			"Type":"String",
+			"Default":"dev-useast1",
+			"AllowedValues":[
+				"dev-useast1",
+				"dev-uswest2"
+			]
+		},
+		"MasterInstanceType": {
+			"Description": "EC2 instance type of Master node",
+			"Type": "String",
+			"Default": "m2.2xlarge"
+		},
+		"OwnerContact": {
+			"Description": "Tag - Contact for the individual or team who created the cluster",
+			"Type": "String",
+			"Default": "ravi.ramadoss@capitalone.com"
+		},
+		"TerminationProtected": {
+			"Description": "Prevents accidental termination of the cluster: to shut down the cluster, you must turn off termination protection",
+			"Type": "String",
+			"AllowedValues": [
+				"true",
+				"false"
+			],
+			"Default": "false"
+		},
+		"ScaleDownBehavior": {
+			"Description": "Indicates how individual EC2 instances terminate when an automatic scale-in activity occurs or an instance group is resized",
+			"Type": "String",
+			"Default": "TERMINATE_AT_INSTANCE_HOUR"
+		},
+		"SecurityConfiguration": {
+			"Description": "The name of the security configuration applied to the cluster",
+			"Type": "String",
+			"Default": "COF-Encrypted"
+		}
+	},
+
+	"Resources": {
+		"EMRCluster": {
+			"Type": "AWS::EMR::Cluster",
+			"Properties": {
+				"AdditionalInfo": {
+					"Fn::Sub": [
+						"{ 'ami64': '${AMI}', 'amiHvm64': '${AMI}', 'customAMI': true, 'hadoopConfigurationVersion': '4.0', 'instanceAwsClientConfiguration': { 'proxyPort': 8099, 'proxyHost': 'entproxy.kdc.capitalone.com' } }", {
+							"AMI": {
+								"Fn::FindInMap": ["params", "AMI", {
+									"Ref": "Environment"
+								}]
+							}
+						}
+					]
+				},
+				"Applications": [{
+						"Name": "Spark"
+					},
+					{
+						"Name": "Hive"
+					},
+					{
+						"Name": "ZooKeeper"
+					},
+					{
+						"Name": "Hue"
+					}
+				],
+				"AutoScalingRole": {
+					"Ref": "AutoScalingRole"
+				},
+				"BootstrapActions": [{
+						"Name": "cof-emr-bootstrap",
+						"ScriptBootstrapAction": {
+							"Args": [
+								{"Fn::FindInMap":["params","SecurityDomain", {"Ref": "Environment"}]}, 
+								{"Fn::FindInMap":["params","SecurityRole", {"Ref": "Environment"}]}
+							],
+							"Path": {"Fn::FindInMap": ["params", "BootstrapScript", {"Ref": "Environment"}]}
+						}
+					}
+				],
+				"Instances": {
+					"MasterInstanceGroup": {
+						"InstanceCount": "1",
+						"InstanceType": {
+							"Ref": "MasterInstanceType"
+						},
+						"Market": "ON_DEMAND",
+						"Name": "Master instance group - 1"
+					},
+					"AdditionalMasterSecurityGroups": {
+						"Fn::FindInMap": ["params", "AdditionalMasterSecurityGroups", {
+							"Ref": "Environment"
+						}]
+					},
+					"AdditionalSlaveSecurityGroups": {
+						"Fn::FindInMap": ["params", "AdditionalSlaveSecurityGroups", {
+							"Ref": "Environment"
+						}]
+					},
+					"CoreInstanceGroup": {
+						"InstanceCount": "1",
+						"InstanceType": {
+							"Ref": "CoreInstanceType"
+						},
+						"Market": "ON_DEMAND",
+						"Name": "Core instance group"
+					},
+					"Ec2KeyName": {
+						"Fn::FindInMap": ["params", "Ec2KeyName", {
+							"Ref": "Environment"
+						}]
+					},
+					"Ec2SubnetId": {
+						"Fn::FindInMap": ["params", "Ec2SubnetId", {
+							"Ref": "Environment"
+						}]
+					},
+					"EmrManagedMasterSecurityGroup": {
+						"Fn::FindInMap": ["params", "EmrManagedMasterSecurityGroup", {
+							"Ref": "Environment"
+						}]
+					},
+					"EmrManagedSlaveSecurityGroup": {
+						"Fn::FindInMap": ["params", "EmrManagedSlaveSecurityGroup", {
+							"Ref": "Environment"
+						}]
+					},
+					"ServiceAccessSecurityGroup": {
+						"Fn::FindInMap": ["params", "ServiceAccessSecurityGroup", {
+							"Ref": "Environment"
+						}]
+					},
+					"TerminationProtected": {
+						"Ref": "TerminationProtected"
+					}
+				},
+				"JobFlowRole": {
+					"Fn::FindInMap": ["params", "EmrJobFlowRole", {
+							"Ref": "Environment"
+					}]
+				},
+				"LogUri": {
+					"Fn::FindInMap": ["params", "LogUri", {
+						"Ref": "Environment"
+					}]
+				},
+				"Name": {
+					"Ref": "Name"
+				},
+				"ReleaseLabel": {
+					"Ref": "ReleaseLabel"
+				},
+				"SecurityConfiguration": {
+					"Ref": "SecurityConfiguration"
+				},
+				"ServiceRole": {
+					"Fn::FindInMap": ["params", "EmrServiceRole", {
+						"Ref": "Environment"
+					}]
+				},
+				"Tags": [{
+						"Key": "ASV",
+						"Value": {
+							"Ref": "ASV"
+						}
+					},
+					{
+						"Key": "CMDBEnvironment",
+						"Value": {
+							"Fn::FindInMap": ["params", "CMDBEnvironment", {
+								"Ref": "Environment"
+							}]
+						}
+					},
+					{
+						"Key": "OwnerContact",
+						"Value": {
+							"Ref": "OwnerContact"
+						}
+					}
+				],
+				"VisibleToAllUsers": true
+			}
+		}
+	}
+}
