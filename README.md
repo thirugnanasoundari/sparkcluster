@@ -18,3 +18,26 @@ output
 }
 ```
 
+set PYSPARK_DRIVER_PYTHON_OPTS='notebook'
+pyspark
+
+
+## learnings
+parquet cannot have space in column names.
+If parquet files have mixed cases, then athena cannot recognize it. Need to convert all names to lowercases.
+cannot write custom udf in python. Have to create scala function and wrap it in python.
+
+## Functions learnt
+withColumnRenamed is used to rename column when writing to parquet.
+
+## Important class of pyspark
+* pyspark.sql.SparkSession Main entry point for DataFrame and SQL functionality.
+* pyspark.sql.DataFrame A distributed collection of data grouped into named columns.
+* pyspark.sql.Column A column expression in a DataFrame.
+* pyspark.sql.Row A row of data in a DataFrame.
+* pyspark.sql.GroupedData Aggregation methods, returned by DataFrame.groupBy().
+* pyspark.sql.DataFrameNaFunctions Methods for handling missing data (null values).
+* pyspark.sql.DataFrameStatFunctions Methods for statistics functionality.
+* pyspark.sql.functions List of built-in functions available for DataFrame.
+* pyspark.sql.types List of data types available.
+* pyspark.sql.Window For working with window functions.*
