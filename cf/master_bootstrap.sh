@@ -73,7 +73,8 @@ spark-submit --version
 sudo -u ec2-user SPARK_PUBLIC_DNS=$publicDns $SPARK_HOME/sbin/start-master.sh
 	
 #signal completion
-curl -X PUT -H 'Content-Type:' \
+
+curl -v -X PUT -H 'Content-Type:' \
 --data-binary '{"Status" : "SUCCESS","Reason" : "Spark Master Started","UniqueId" : "ID1234","Data" : "Spark Master Started."}' "$signalUrl"
 
 #sudo ./boot.sh master  54.236.164.152 54.236.164.152
