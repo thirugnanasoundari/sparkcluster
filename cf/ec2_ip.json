@@ -166,29 +166,54 @@
   },
 
   "Resources" : {
-    "EC2Instance" : {
+    "SparkMaster" : {
       "Type" : "AWS::EC2::Instance",
       "Properties" : {
         "UserData" : { "Fn::Base64" : { "Fn::Join" : [ "", 
           [ "#!/bin/bash -v \n",
-            "curl https://raw.githubusercontent.com/DelawareDataLake/dlk/master/cf/bootstrap.sh -o ~ec2-user/bootstrap.sh\n",
-            "chmod 777 ~ec2-user/bootstrap.sh\n",
-            "~ec2-user/bootstrap.sh ",
-            " master ",
-            { "Ref" : "IPAddress" },
+            "curl https://raw.githubusercontent.com/DelawareDataLake/dlk/master/cf/bootstrap.sh -o ~ec2-user/master_bootstrap.sh\n",
+            "chmod 777 ~ec2-user/master_bootstrap.sh\n",
+            "~ec2-user/master_bootstrap.sh",
             " ",
-            { "Ref" : "IPAddress" } 
+            "-d=",
+            { "Ref" : "SparkMasterIp" },
+            " ",
+            "-s=",
+            { "Ref" : "WaitHandle" }
             ]
       ]}},
         "InstanceType" : { "Ref" : "InstanceType" },
-        "SecurityGroups" : [ { "Ref" : "InstanceSecurityGroup" } ],
+        "SecurityGroups" : [ { "Ref" : "MasterSecurityGroup" } ],
+        "KeyName" : { "Ref" : "KeyName" },
+        "ImageId" : { "Fn::FindInMap" : [ "AWSRegionArch2AMI", { "Ref" : "AWS::Region" },
+                          { "Fn::FindInMap" : [ "AWSInstanceType2Arch", { "Ref" : "InstanceType" }, "Arch" ] } ] }
+      }
+    },
+    "SparkSlave" : {
+      "Type" : "AWS::EC2::Instance",
+      "Properties" : {
+        "UserData" : { "Fn::Base64" : { "Fn::Join" : [ "", 
+          [ "#!/bin/bash -v \n",
+            "curl https://raw.githubusercontent.com/DelawareDataLake/dlk/master/cf/bootstrap.sh -o ~ec2-user/slave_bootstrap.sh\n",
+            "chmod 777 ~ec2-user/slave_bootstrap.sh\n",
+            "~ec2-user/slave_bootstrap.sh",
+            " ",
+            "-d=",
+            { "Ref" : "SparkSlaveIp" },
+            " ",
+            "-m=",
+            { "Ref" : "SparkMasterIp" }
+            ]
+      ]}},
+        "InstanceType" : { "Ref" : "InstanceType" },
+        "SecurityGroups" : [ { "Ref" : "SlaveSecurityGroup" } ],
         "KeyName" : { "Ref" : "KeyName" },
         "ImageId" : { "Fn::FindInMap" : [ "AWSRegionArch2AMI", { "Ref" : "AWS::Region" },
                           { "Fn::FindInMap" : [ "AWSInstanceType2Arch", { "Ref" : "InstanceType" }, "Arch" ] } ] }
       }
     },
 
-    "InstanceSecurityGroup" : {
+    "MasterSecurityGroup" : {
       "Type" : "AWS::EC2::SecurityGroup",
       "Properties" : {
         "GroupDescription" : "Enable SSH access",
@@ -201,26 +226,64 @@
       }
     },
 
-    "IPAddress" : {
+    "SlaveSecurityGroup" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription" : "Enable SSH access",
+        "SecurityGroupIngress" : 
+          [ { "IpProtocol" : "tcp", "FromPort" : "22", "ToPort" : "22", "CidrIp" : { "Ref" : "SSHLocation"} },
+            { "IpProtocol" : "tcp", "FromPort" : "8080", "ToPort" : "8080", "CidrIp" : { "Ref" : "SSHLocation"} },
+            { "IpProtocol" : "tcp", "FromPort" : "8081", "ToPort" : "8081", "CidrIp" : { "Ref" : "SSHLocation"} },
+            { "IpProtocol" : "tcp", "FromPort" : "7077", "ToPort" : "7077", "CidrIp" : { "Ref" : "SSHLocation"} }
+          ]
+      }
+    },
+
+    "SparkMasterIp" : {
       "Type" : "AWS::EC2::EIP"
     },
 
-    "IPAssoc" : {
+    "IPAssoc1" : {
       "Type" : "AWS::EC2::EIPAssociation",
       "Properties" : {
-        "InstanceId" : { "Ref" : "EC2Instance" },
-        "EIP" : { "Ref" : "IPAddress" }
+        "InstanceId" : { "Ref" : "SparkMaster" },
+        "EIP" : { "Ref" : "SparkMasterIp" }
       }
-    }
+    },
+    "SparkSlaveIp" : {
+      "Type" : "AWS::EC2::EIP"
+    },
+
+    "IPAssoc2" : {
+      "Type" : "AWS::EC2::EIPAssociation",
+      "Properties" : {
+        "InstanceId" : { "Ref" : "SparkSlave" },
+        "EIP" : { "Ref" : "SparkSlaveIp" }
+      }
+    },
+
+"WaitHandle" : {
+   "Type" : "AWS::CloudFormation::WaitConditionHandle"
+},
+
+"WaitCondition" : {
+   "Type" : "AWS::CloudFormation::WaitCondition",
+   "DependsOn" : "SparkSlave",
+   "Properties" : {
+      "Handle"  : { "Ref" : "WaitHandle" },
+      "Timeout" : "300",
+      "Count"   : "1"
+   }
+}        
   },
   "Outputs" : {
     "InstanceId" : {
       "Description" : "InstanceId of the newly created EC2 instance",
-      "Value" : { "Ref" : "EC2Instance" }
+      "Value" : { "Ref" : "SparkMaster" }
     },
-    "InstanceIPAddress" : {
+    "SparkMasterIPAddress" : {
       "Description" : "IP address of the newly created EC2 instance",
-      "Value" : { "Ref" : "IPAddress" }
+      "Value" : { "Ref" : "SparkMasterIp" }
     }
   }
 }

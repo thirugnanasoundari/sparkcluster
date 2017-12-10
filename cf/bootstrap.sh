@@ -3,6 +3,7 @@
 machineType="$1"
 masterIp="$2"
 slaveIp="$3"
+signalUrl="$4"
 
 if [[ $machineType == "" ]]; then
 	echo "machineType should be passed. It was empty"
@@ -26,6 +27,11 @@ fi
 
 if [[ $machineType != "master" && $machineType != "slave" ]]; then
 	echo "usage $0 master|slave [masterip]"
+	exit 1
+fi
+
+if [[ $signalUrl == "" ]]; then
+	echo "signalUrl not passed"
 	exit 1
 fi
 
@@ -82,5 +88,9 @@ else
 	exit 1
 fi	
 	#statements
+
+#signal completion
+curl -X PUT -H 'Content-Type:' \
+--data-binary '{"Status" : "SUCCESS","Reason" : "Spark Master Started","UniqueId" : "ID1234","Data" : "Spark Master Started."}' "$signalUrl"
 
 #sudo ./boot.sh master  54.236.164.152 54.236.164.152
