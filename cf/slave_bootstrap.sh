@@ -72,4 +72,4 @@ alternatives --set java /usr/lib/jvm/jre-1.8.0-openjdk.x86_64/bin/java
 spark-submit --version
 # (Should display a version number)
 
-sudo -u ec2-user SPARK_PUBLIC_DNS=$slaveIp $SPARK_HOME/sbin/start-slave.sh spark://$masterIp:7077
+sudo -u ec2-user SPARK_PUBLIC_DNS=$publicDns $SPARK_HOME/sbin/start-slave.sh spark://$masterIp:7077
