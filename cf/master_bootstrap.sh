@@ -38,6 +38,8 @@ fi
 #update
 sudo yum update -y
 
+set -x
+
 # Download Spark to the ec2-user's home directory
 cd ~
 wget https://d3kbcqa49mib13.cloudfront.net/spark-2.2.0-bin-hadoop2.7.tgz

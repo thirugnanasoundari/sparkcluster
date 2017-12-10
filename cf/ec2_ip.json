@@ -178,8 +178,9 @@
             "-d=",
             { "Ref" : "SparkMasterIp" },
             " ",
-            "-s=",
-            { "Ref" : "WaitHandle" }
+            "'-s=",
+            { "Ref" : "WaitHandle" },
+            "'"
             ]
       ]}},
         "InstanceType" : { "Ref" : "InstanceType" },

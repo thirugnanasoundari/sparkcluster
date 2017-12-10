@@ -2,6 +2,8 @@
 publicDns=""
 masterIp=""
 
+set -x
+
 #!/bin/bash
 
 for i in "$@"
