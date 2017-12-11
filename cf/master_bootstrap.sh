@@ -43,7 +43,9 @@ set -x
 # Download Spark to the ec2-user's home directory
 cd ~
 wget https://d3kbcqa49mib13.cloudfront.net/spark-2.2.0-bin-hadoop2.7.tgz
- 
+
+#place spark conf
+curl https://raw.githubusercontent.com/DelawareDataLake/sparkcluster/master/cf/spark-defaults.conf.sh -o /opt/spark/conf/spark-defaults.conf 
 # Unpack Spark in the /opt directory
 sudo tar zxvf spark-2.2.0-bin-hadoop2.7.tgz -C /opt
  
@@ -53,7 +55,6 @@ sudo ln -fs spark-2.2.0-bin-hadoop2.7 /opt/spark
 # Insert these lines into your ~/.bash_profile:
 echo 'export SPARK_HOME=/opt/spark' >> ~ec2-user/.bash_profile
 echo 'PATH=$PATH:$SPARK_HOME/bin' >> ~ec2-user/.bash_profile
-echo 'export SPARK_LOCAL_IP=127.0.0.1' >> ~ec2-user/.bash_profile
 echo "export SPARK_PUBLIC_DNS=$publicDns" >> ~ec2-user/.bash_profile
 
 echo 'export PATH' >> ~ec2-user/.bash_profile
