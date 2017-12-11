@@ -45,7 +45,7 @@ cd ~
 wget https://d3kbcqa49mib13.cloudfront.net/spark-2.2.0-bin-hadoop2.7.tgz
 
 #place spark conf
-curl https://raw.githubusercontent.com/DelawareDataLake/sparkcluster/master/cf/spark-defaults.conf.sh -o /opt/spark/conf/spark-defaults.conf 
+curl https://raw.githubusercontent.com/DelawareDataLake/sparkcluster/master/cf/spark-defaults.conf -o /opt/spark/conf/spark-defaults.conf 
 # Unpack Spark in the /opt directory
 sudo tar zxvf spark-2.2.0-bin-hadoop2.7.tgz -C /opt
  

@@ -7,5 +7,5 @@ spark = SparkSession \
     .getOrCreate()
 
 
-spark.read.csv('schools.csv')
-.write.parquet("people.parquet")
+df = spark.read.csv('School_Directory.csv')
+print(df.take(1))
